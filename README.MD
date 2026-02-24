@@ -29,7 +29,7 @@
 
 ## 🖥️ AIX COMMAND EMULATOR — WSL Practice Setup
 
-> The script `aix_emu.sh` detects AIX-unique commands and automatically runs the Linux equivalent, enabling consistent command behavior between WSL and production AIX environments.
+> The script [`aix_emu.sh`](aix_emu.sh) detects AIX-unique commands and automatically runs the Linux equivalent, enabling consistent command behavior between WSL and production AIX environments.
 
 ### How It Works
 
@@ -80,7 +80,7 @@ echo "source /mnt/c/Users/Owner/LearningAIX/aix_emu.sh" >> ~/.bashrc
 
 ### Error Checking and Log Inspection
 
-> **Inspect logs and check for failures** using these AIX-emulated commands at the prompt (after sourcing `aix_emu.sh`). They emulate AIX behavior but run Linux commands underneath.
+> **Inspect logs and check for failures** using these AIX-emulated commands at the prompt (after sourcing [`aix_emu.sh`](aix_emu.sh)). They emulate AIX behavior but run Linux commands underneath.
 
 #### AIX-Style Error Checking (Recommended for Emulation)
 - `errpt -a`: Shows all recent errors (maps to `journalctl -p err + dmesg`).

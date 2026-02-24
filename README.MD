@@ -4,6 +4,16 @@
 
 ---
 
+## 📋 RUNBOOKS
+
+> This repository is built around operational runbooks for AIX / IBM Content Manager OnDemand (CMOD) environments in banking. The runbooks define the exact procedures used by SRE teams to manage shift health checks, incident response, and system diagnostics.
+
+| ID | Runbook | Description |
+|---|---|---|
+| **[RB-CMOD-001](RunBook_cmod.md)** | **[CMOD Shift Operations Runbook](RunBook_cmod.md)** | Mandatory shift start and shift end health check procedures for CMOD — covers server status, storage pools, overnight load job validation, index health, error triage, and shift handover documentation. Includes the `cmod_shift_report.sh` automation script. |
+
+---
+
 ## TABLE OF CONTENTS
 1. [Skills Bridge — z/OS ↔ AIX](#1-skills-bridge)
 2. [AIX Core Concepts Refresher](#2-aix-core-concepts-refresher)
@@ -12,9 +22,6 @@
 5. [Production Support Playbook](#5-production-support-playbook)
 6. [SRE Mindset + ITIL Processes](#6-sre-mindset--itil-processes)
 7. [Banking/Mission-Critical Patterns](#7-bankingmission-critical-patterns)
-
-### Runbooks
-- [RB-CMOD-001 — CMOD Shift Operations Runbook](RunBook_cmod.md)
 
 
 

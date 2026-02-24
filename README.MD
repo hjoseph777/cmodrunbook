@@ -10,7 +10,7 @@
 
 | ID | Runbook | Description |
 |---|---|---|
-| **[RB-CMOD-001](RunBook_cmod.md)** | **[CMOD Shift Operations Runbook](RunBook_cmod.md)** | Mandatory shift start and shift end health check procedures for CMOD — covers server status, storage pools, overnight load job validation, index health, error triage, and shift handover documentation. Includes the `cmod_shift_report.sh` automation script. |
+| **[RB-CMOD-001](RunBook_cmod.md)** | **[CMOD Shift Operations Runbook](RunBook_cmod.md)** | Mandatory shift start and shift end health check procedures for CMOD — covers server status, storage pools, overnight load job validation, index health, error triage, and shift handover documentation. Includes the [`cmod_shift_report.sh`](cmod_shift_report.sh) automation script. |
 
 ---
 

@@ -30,6 +30,8 @@
 ## 🖥️ AIX COMMAND EMULATOR — WSL Practice Setup
 
 > The script [`aix_emu.sh`](aix_emu.sh) detects AIX-unique commands and automatically runs the Linux equivalent, enabling consistent command behavior between WSL and production AIX environments.
+>
+> The script [`aix_launch.sh`](aix_launch.sh) launches all 6 AIX practice sessions simultaneously in a tmux multi-pane layout — opening the nmon, errpt, smit, root, clstat, and cmod terminals shown in the tab bar above.
 
 ### How It Works
 

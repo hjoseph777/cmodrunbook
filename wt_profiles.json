@@ -1,0 +1,79 @@
+{
+    "profiles": [
+        {
+            "guid": "{a1b2c3d4-0001-4aix-8000-aix000000001}",
+            "name": "AIX: nmon",
+            "commandline": "wsl.exe -d Ubuntu-24.04 -- bash -i -c \"source /mnt/c/Users/Owner/LearningAIX/aix_emu.sh && nmon; exec bash\"",
+            "startingDirectory": "/mnt/c/Users/Owner/LearningAIX",
+            "tabTitle": "AIX: nmon",
+            "tabColor": "#00AA00",
+            "colorScheme": "One Half Dark",
+            "suppressApplicationTitle": true,
+            "hidden": false
+        },
+        {
+            "guid": "{a1b2c3d4-0002-4aix-8000-aix000000002}",
+            "name": "AIX: errpt",
+            "commandline": "wsl.exe -d Ubuntu-24.04 -- bash -i -c \"source /mnt/c/Users/Owner/LearningAIX/aix_emu.sh && errwatch 10; exec bash\"",
+            "startingDirectory": "/mnt/c/Users/Owner/LearningAIX",
+            "tabTitle": "AIX: errpt",
+            "tabColor": "#CC4400",
+            "colorScheme": "One Half Dark",
+            "suppressApplicationTitle": true,
+            "hidden": false
+        },
+        {
+            "guid": "{a1b2c3d4-0003-4aix-8000-aix000000003}",
+            "name": "AIX: smit",
+            "commandline": "wsl.exe -d Ubuntu-24.04 -- bash -i -c \"source /mnt/c/Users/Owner/LearningAIX/aix_emu.sh && smit; exec bash\"",
+            "startingDirectory": "/mnt/c/Users/Owner/LearningAIX",
+            "tabTitle": "AIX: smit",
+            "tabColor": "#0066CC",
+            "colorScheme": "One Half Dark",
+            "suppressApplicationTitle": true,
+            "hidden": false
+        },
+        {
+            "guid": "{a1b2c3d4-0004-4aix-8000-aix000000004}",
+            "name": "AIX: ksh",
+            "commandline": "wsl.exe -d Ubuntu-24.04 -- bash -i -c \"source /mnt/c/Users/Owner/LearningAIX/aix_emu.sh; exec bash\"",
+            "startingDirectory": "/mnt/c/Users/Owner/LearningAIX",
+            "tabTitle": "AIX: ksh",
+            "tabColor": "#6600AA",
+            "colorScheme": "One Half Dark",
+            "suppressApplicationTitle": true,
+            "hidden": false
+        },
+        {
+            "guid": "{a1b2c3d4-0005-4aix-8000-aix000000005}",
+            "name": "AIX: root",
+            "commandline": "wsl.exe -d Ubuntu-24.04 -- bash -i -c \"source /mnt/c/Users/Owner/LearningAIX/aix_emu.sh && sudo -v; exec bash\"",
+            "startingDirectory": "/mnt/c/Users/Owner/LearningAIX",
+            "tabTitle": "AIX: root",
+            "tabColor": "#CC0000",
+            "colorScheme": "One Half Dark",
+            "suppressApplicationTitle": true,
+            "hidden": false
+        },
+        {
+            "guid": "{a1b2c3d4-0006-4aix-8000-aix000000006}",
+            "name": "AIX: clstat",
+            "commandline": "wsl.exe -d Ubuntu-24.04 -- bash -i -c \"source /mnt/c/Users/Owner/LearningAIX/aix_emu.sh && clwatch 5; exec bash\"",
+            "startingDirectory": "/mnt/c/Users/Owner/LearningAIX",
+            "tabTitle": "AIX: clstat",
+            "tabColor": "#008888",
+            "colorScheme": "One Half Dark",
+            "suppressApplicationTitle": true,
+            "hidden": false        },
+        {
+            "guid": "{a1b2c3d4-0007-4a00-8000-a00000000007}",
+            "name": "AIX: cmod",
+            "commandline": "wsl.exe -d Ubuntu-24.04 -- bash -i -c \"cd /mnt/c/Users/Owner/LearningAIX && bash cmod_shift_report.sh --start; exec bash\"",
+            "startingDirectory": "/mnt/c/Users/Owner/LearningAIX",
+            "tabTitle": "AIX: cmod",
+            "tabColor": "#AA6600",
+            "colorScheme": "One Half Dark",
+            "suppressApplicationTitle": true,
+            "hidden": false        }
+    ]
+}

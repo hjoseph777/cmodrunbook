@@ -1,0 +1,270 @@
+#!/usr/bin/env bash
+# ═══════════════════════════════════════════════════════════════════
+#  aix_emu.sh — AIX Command Emulator for WSL / Linux
+#  Author: AIX SRE Harry Joseph
+#
+#  USAGE:
+#    source ~/aix_emu.sh          # Load for current session
+#
+#  TO MAKE PERMANENT (auto-load every WSL session):
+#    echo "source ~/aix_emu.sh" >> ~/.bashrc
+#
+#  HOW IT WORKS:
+#    - AIX commands that are IDENTICAL on Linux → pass through unchanged
+#    - AIX-UNIQUE commands → silently run the Linux equivalent
+#    - Each translation prints a one-line banner so you learn the mapping
+# ═══════════════════════════════════════════════════════════════════
+
+_aix_banner() {
+    echo -e "\e[36m── [AIX: $1  →  Linux: $2] \e[0m"
+}
+
+_aix_stub() {
+    echo -e "\e[33m── [AIX: $1 → STUB: not available in WSL — concept shown below] \e[0m"
+}
+
+# ───────────────────────────────────────────────
+#  LVM / STORAGE
+# ───────────────────────────────────────────────
+
+lspv() {
+    # AIX: list physical volumes   Linux: lsblk
+    _aix_banner "lspv" "lsblk"
+    lsblk -o NAME,SIZE,TYPE,MOUNTPOINT,FSTYPE 2>/dev/null
+}
+
+lsvg() {
+    if [[ "$1" == "-l" ]]; then
+        # AIX: lsvg -l rootvg   Linux: lvdisplay
+        _aix_banner "lsvg -l $2" "lvdisplay"
+        sudo lvdisplay 2>/dev/null || echo "[INFO] LVM2 tools not installed — run: sudo apt install lvm2"
+    else
+        # AIX: lsvg   Linux: vgdisplay
+        _aix_banner "lsvg" "vgdisplay"
+        sudo vgdisplay 2>/dev/null || echo "[INFO] LVM2 tools not installed — run: sudo apt install lvm2"
+    fi
+}
+
+lsfs() {
+    # AIX: list filesystems   Linux: mount
+    _aix_banner "lsfs" "mount | column -t"
+    mount | column -t
+}
+
+# Override df to handle AIX's -g (gigabytes) flag
+df() {
+    if [[ "$*" == *"-g"* ]]; then
+        _aix_banner "df -g" "df -h"
+        command df -h "${@/-g/}"
+    else
+        command df "$@"
+    fi
+}
+
+# ───────────────────────────────────────────────
+#  AIX ERROR REPORTING
+# ───────────────────────────────────────────────
+
+errpt() {
+    case "$1" in
+        -a)
+            _aix_banner "errpt -a" "journalctl -p err + dmesg"
+            echo "=== Kernel Errors (dmesg) ==="
+            dmesg --level=err,crit 2>/dev/null | tail -20 || dmesg | grep -iE "error|fail" | tail -20
+            echo ""
+            echo "=== System Journal Errors ==="
+            sudo journalctl -p err --no-pager -n 20 2>/dev/null || echo "[INFO] journalctl not available"
+            ;;
+        -d)
+            case "$2" in
+                H)
+                    _aix_banner "errpt -d H" "dmesg (hardware errors)"
+                    dmesg | grep -iE "hardware|disk|ata|scsi|nvme|i/o error" | tail -30
+                    ;;
+                S)
+                    _aix_banner "errpt -d S" "journalctl -p err (software errors)"
+                    sudo journalctl -p err --no-pager -n 30 2>/dev/null || \
+                        grep -iE "error|fail|kernel" /var/log/syslog 2>/dev/null | tail -30
+                    ;;
+                *)
+                    echo "Usage: errpt -d H   (hardware)   or   errpt -d S   (software)"
+                    ;;
+            esac
+            ;;
+        -j)
+            _aix_banner "errpt -j $2" "journalctl GREP: $2"
+            sudo journalctl --no-pager 2>/dev/null | grep -i "$2" | head -20 || \
+                dmesg | grep -i "$2" | head -20
+            ;;
+        *)
+            _aix_banner "errpt" "dmesg errors + journal summary"
+            echo "=== Recent Kernel Messages (dmesg errors) ==="
+            dmesg --level=err,crit,warn 2>/dev/null | tail -15 || dmesg | tail -15
+            echo ""
+            echo "=== Last 10 System Errors (journal) ==="
+            sudo journalctl -p err --no-pager -n 10 2>/dev/null || \
+                grep -iE "error|fail" /var/log/syslog 2>/dev/null | tail -10
+            ;;
+    esac
+}
+
+# ───────────────────────────────────────────────
+#  PERFORMANCE MONITORING
+# ───────────────────────────────────────────────
+
+nmon() {
+    # AIX: nmon (IBM's interactive perf tool)   Linux: htop or top
+    if command -v htop &>/dev/null; then
+        _aix_banner "nmon" "htop"
+        htop
+    else
+        _aix_banner "nmon" "top  (install htop for closer experience)"
+        top
+    fi
+}
+
+svmon() {
+    case "$1" in
+        -G)
+            _aix_banner "svmon -G" "free -h + vmstat -s"
+            echo "=== Memory Summary ==="
+            free -h
+            echo ""
+            echo "=== Virtual Memory Stats ==="
+            vmstat -s | head -15
+            ;;
+        -P)
+            _aix_banner "svmon -P $2" "cat /proc/$2/status"
+            if [[ -n "$2" && -f "/proc/$2/status" ]]; then
+                grep -E "Name|VmRSS|VmSize|VmSwap|VmPeak" "/proc/$2/status"
+            else
+                echo "[ERROR] PID '$2' not found. Usage: svmon -P <pid>"
+                echo "Tip: Use 'ps -ef | grep yourapp' to find the PID first."
+            fi
+            ;;
+        *)
+            _aix_banner "svmon" "free -h"
+            free -h
+            ;;
+    esac
+}
+
+# ───────────────────────────────────────────────
+#  AIX NETWORK
+# ───────────────────────────────────────────────
+
+entstat() {
+    # AIX: entstat -all en0   Linux: ip -s link show eth0
+    local iface="${2:-$(ip route | grep default | awk '{print $5}' | head -1)}"
+    _aix_banner "entstat -all ${iface}" "ip -s link show ${iface}"
+    ip -s link show "$iface" 2>/dev/null || ip -s link
+}
+
+no() {
+    # AIX: no -o (network options)   Linux: sysctl net.*
+    if [[ "$1" == "-o" ]]; then
+        _aix_banner "no -o" "sysctl -a | grep net."
+        sysctl -a 2>/dev/null | grep "^net\." | head -40
+    else
+        echo "Usage: no -o    (list network tuning parameters)"
+    fi
+}
+
+# ───────────────────────────────────────────────
+#  USER MANAGEMENT
+# ───────────────────────────────────────────────
+
+lsuser() {
+    # AIX: lsuser ALL   Linux: parse /etc/passwd
+    _aix_banner "lsuser ALL" "awk /etc/passwd"
+    printf "%-20s %-8s %-8s %s\n" "USERNAME" "UID" "GID" "HOME"
+    printf "%-20s %-8s %-8s %s\n" "--------" "---" "---" "----"
+    awk -F: '{printf "%-20s %-8s %-8s %s\n", $1, $3, $4, $6}' /etc/passwd
+}
+
+mkuser() {
+    # AIX: mkuser username   Linux: useradd username
+    _aix_banner "mkuser $1" "useradd $1"
+    sudo useradd "$1" && echo "[OK] User '$1' created." || echo "[ERROR] Failed to create user '$1'."
+}
+
+# ───────────────────────────────────────────────
+#  DEVICE MANAGEMENT
+# ───────────────────────────────────────────────
+
+lsdev() {
+    # AIX: lsdev   Linux: lshw or lspci
+    _aix_banner "lsdev" "lshw -short / lspci"
+    if command -v lshw &>/dev/null; then
+        sudo lshw -short 2>/dev/null
+    elif command -v lspci &>/dev/null; then
+        lspci
+    else
+        echo "[INFO] Install lshw: sudo apt install lshw"
+        ls /dev
+    fi
+}
+
+cfgmgr() {
+    # AIX: cfgmgr (configure devices)   Linux: udevadm trigger
+    _aix_banner "cfgmgr" "udevadm trigger"
+    sudo udevadm trigger 2>/dev/null && echo "[OK] Device configuration refreshed."
+}
+
+# ───────────────────────────────────────────────
+#  HACMP / PowerHA CLUSTER — Stubs (WSL only)
+# ───────────────────────────────────────────────
+
+clstat() {
+    _aix_stub "clstat"
+    echo "  In AIX: clstat shows PowerHA cluster node status and health."
+    echo ""
+    printf "  %-20s %-10s %-10s\n" "NODE" "STATE" "ROLE"
+    printf "  %-20s %-10s %-10s\n" "$(hostname)" "UP" "PRIMARY"
+    printf "  %-20s %-10s %-10s\n" "$(hostname)-node2" "UP" "STANDBY"
+}
+
+clRGinfo() {
+    _aix_stub "clRGinfo"
+    echo "  In AIX: clRGinfo shows which node owns each Resource Group."
+    echo ""
+    printf "  %-20s %-10s %-20s\n" "RESOURCE GROUP" "STATE" "NODE"
+    printf "  %-20s %-10s %-20s\n" "CMOD_RG" "ONLINE" "$(hostname)"
+}
+
+clfindres() {
+    _aix_stub "clfindres"
+    echo "  In AIX: clfindres locates and describes cluster resources."
+    echo "  Usage: clfindres -r RESOURCE_GROUP_NAME"
+}
+
+smit() {
+    _aix_stub "smit $*"
+    echo "  SMIT is AIX's menu-driven system management interface."
+    echo "  Common Linux equivalents:"
+    echo "    smit hacmp    → no direct equivalent (use clstat, clfindres)"
+    echo "    smit storage  → lsblk, fdisk, lvm2 tools"
+    echo "    smit network  → nmcli, ip, ifconfig"
+    echo "    smit users    → useradd, usermod, passwd"
+}
+
+# ───────────────────────────────────────────────
+#  LOAD BANNER
+# ───────────────────────────────────────────────
+
+echo -e "\e[32m"
+echo "╔══════════════════════════════════════════════════════════════╗"
+echo "║         ✅  AIX Emulator Loaded — WSL Practice Mode         ║"
+echo "╠══════════════════════════════════════════════════════════════╣"
+echo "║  AIX-unique commands now run their Linux equivalents.        ║"
+echo "║  A cyan banner shows the mapping on each execution.         ║"
+echo "╠══════════════════════════════════════════════════════════════╣"
+echo "║  STORAGE:   lspv  lsvg  lsfs  df -g                         ║"
+echo "║  ERRORS:    errpt  errpt -a  errpt -d H/S  errpt -j          ║"
+echo "║  PERF:      nmon  svmon -G  svmon -P <pid>                   ║"
+echo "║  NETWORK:   entstat  no -o                                   ║"
+echo "║  USERS:     lsuser  mkuser                                   ║"
+echo "║  DEVICES:   lsdev  cfgmgr                                    ║"
+echo "║  CLUSTER:   clstat  clRGinfo  clfindres  smit  (stubs)       ║"
+echo "╚══════════════════════════════════════════════════════════════╝"
+echo -e "\e[0m"
